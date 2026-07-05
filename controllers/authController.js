@@ -11,12 +11,15 @@ import { generateOTP, hashOTP, verifyOTP } from '../utils/otpUtils.js';
 import { getGoogleAuthURL, getGoogleTokens, getGoogleUser } from '../utils/googleOAuth.js';
 
 // Cookie options helper
-const getCookieOptions = () => ({
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-});
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+};
 
 // @desc    Send OTP for user registration
 // @route   POST /api/auth/send-register-otp
@@ -534,12 +537,7 @@ export const googleCallback = asyncHandler(async (req, res) => {
     await user.save();
 
     // Set refresh token cookie
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie('refreshToken', refreshToken, getCookieOptions());
 
     // Redirect to frontend with access token
     res.redirect(`${process.env.CLIENT_URL}/oauth-success?token=${accessToken}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&role=${user.role}&id=${user._id}&avatar=${encodeURIComponent(user.avatar || '')}&isNew=${isNewUser}`);
