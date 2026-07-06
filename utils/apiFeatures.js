@@ -5,12 +5,13 @@ class APIFeatures {
   }
 
   search() {
-    const keyword = this.queryStr.keyword
+    const searchVal = this.queryStr.keyword || this.queryStr.search;
+    const keyword = searchVal
       ? {
           $or: [
-            { name: { $regex: this.queryStr.keyword, $options: 'i' } },
-            { description: { $regex: this.queryStr.keyword, $options: 'i' } },
-            { tags: { $regex: this.queryStr.keyword, $options: 'i' } },
+            { name: { $regex: searchVal, $options: 'i' } },
+            { description: { $regex: searchVal, $options: 'i' } },
+            { tags: { $regex: searchVal, $options: 'i' } },
           ],
         }
       : {};
@@ -23,7 +24,7 @@ class APIFeatures {
     const queryCopy = { ...this.queryStr };
 
     // Fields to remove from simple query matching
-    const removeFields = ['keyword', 'page', 'limit', 'sort'];
+    const removeFields = ['keyword', 'search', 'page', 'limit', 'sort'];
     removeFields.forEach((el) => delete queryCopy[el]);
 
     // Handle specific e-commerce custom price filters minPrice & maxPrice
