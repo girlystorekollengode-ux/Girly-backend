@@ -12,7 +12,9 @@ import { getGoogleAuthURL, getGoogleTokens, getGoogleUser } from '../utils/googl
 
 // Cookie options helper
 const getCookieOptions = () => {
-  const isProd = process.env.NODE_ENV === 'production';
+  const isProd = process.env.NODE_ENV === 'production' || 
+                 (process.env.GOOGLE_CALLBACK_URL && process.env.GOOGLE_CALLBACK_URL.startsWith('https://')) ||
+                 (process.env.CLIENT_URL && process.env.CLIENT_URL.startsWith('https://'));
   return {
     httpOnly: true,
     secure: isProd,
@@ -237,11 +239,9 @@ export const logout = asyncHandler(async (req, res) => {
     }
   }
 
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-  });
+  const cookieOptions = getCookieOptions();
+  delete cookieOptions.maxAge;
+  res.clearCookie('refreshToken', cookieOptions);
 
   res.json({
     success: true,
